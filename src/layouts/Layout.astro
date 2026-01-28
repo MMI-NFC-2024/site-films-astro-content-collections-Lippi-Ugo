@@ -1,0 +1,47 @@
+---
+import "../styles/global.css";
+interface Props {
+    titre: string;
+}
+const {titre} = Astro.props;
+// Autres options possibles :
+// const props.titre = Astro.props.titre;
+// const props = Astro.props;
+---
+
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{titre} | Site de films</title>
+	</head>
+	<body class="bg-slate-50 min-h-screen">
+		<header class="bg-white shadow-sm border-b border-slate-200">
+			<nav class="container mx-auto px-6 py-4">
+				<div class="flex items-center justify-between">
+					<a href="/" class="text-2xl font-bold text-slate-900 hover:text-blue-600 transition-colors">
+						Cinémathèque
+					</a>
+					<div class="flex gap-8">
+						<a href="/" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Accueil</a>
+						<a href="/personnes" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Artistes</a>
+						<a href="/films" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Films</a>
+					</div>
+				</div>
+			</nav>
+		</header>
+		
+		<main class="container mx-auto px-6 py-12">
+			<slot/>
+		</main>
+		
+		<footer class="bg-white border-t border-slate-200 mt-20">
+			<div class="container mx-auto px-6 py-8 text-center text-slate-500 text-sm">
+				<p>&copy; 2026 Cinémathèque. Tous droits réservés.</p>
+			</div>
+		</footer>
+	</body>
+</html>
