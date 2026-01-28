@@ -1,7 +1,8 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
+import placeholderImage from "../../assets/placeholder-5.png";
 
 const personnes = await getCollection("personnes");
 ---
@@ -16,37 +17,30 @@ const personnes = await getCollection("personnes");
     
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {
-            personnes.map((personne) => {
-                const initiales = personne.data.nom.split(' ').map(mot => mot[0]).join('').slice(0, 2).toUpperCase();
-                return (
-                    <a href={`/personnes/${personne.id}`} 
-                       class="group relative block">
-                        <div class="relative overflow-hidden rounded-lg">
-                            {personne.data.image ? (
-                                <div class="aspect-2/3 bg-slate-900">
-                                    <Image
-                                        src={personne.data.image}
-                                        alt={`Photo de ${personne.data.nom}`}
-                                        class="w-full h-full object-cover group-hover:opacity-80 transition-opacity duration-300"
-                                    />
-                                </div>
-                            ) : (
-                                <div class="aspect-2/3 bg-slate-800 flex items-center justify-center">
-                                    <span class="text-slate-500 text-6xl font-bold">{initiales}</span>
-                                </div>
-                            )}
-                            <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/50 to-transparent p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                <h2 class="font-bold text-white text-sm leading-tight mb-1">
-                                    {personne.data.nom}
-                                </h2>
-                                <p class="text-xs text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    {personne.data.professions ? personne.data.professions.join(", ") + " · " : ""}{personne.data.nationalite}
-                                </p>
-                            </div>
+            personnes.map((personne) => (
+                <a href={`/personnes/${personne.id}`} 
+                   class="group relative block">
+                    <div class="relative overflow-hidden rounded-lg">
+                        <div class="aspect-2/3 bg-slate-900">
+                            <Picture
+                                src={personne.data.image ?? placeholderImage}
+                                alt={`Photo de ${personne.data.nom}`}
+                                densities={[1, 2]}
+                                sizes="(max-width: 320px) 100vw, 200px"
+                                class="w-full h-full object-cover group-hover:opacity-80 transition-opacity duration-300"
+                            />
                         </div>
-                    </a>
-                );
-            })
+                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/50 to-transparent p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                            <h2 class="font-bold text-white text-sm leading-tight mb-1">
+                                {personne.data.nom}
+                            </h2>
+                            <p class="text-xs text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                {personne.data.professions ? personne.data.professions.join(", ") + " · " : ""}{personne.data.nationalite}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            ))
         }
     </div>
 </Layout>
