@@ -1,0 +1,160 @@
+---
+import { getCollection, render, type InferEntrySchema, type ReferenceDataEntry, type RenderedContent} from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import { formatDate, calculerAge, formatProfessions} from "../../helpers.js";
+import { Image } from "astro:assets";
+import ListeFilm from "../../components/ListeFilm.astro";
+import LinkFilm from "../../components/LinkFilm.astro";
+
+export async function getStaticPaths() {
+    const personnes = await getCollection("personnes");
+    return personnes.map((personne) => ({
+        params: { id: personne.id },
+        props: { personne },
+    }));
+}
+const { personne } = Astro.props;
+const { Content } = await render(personne);
+const initiales = personne.data.nom.split(' ').map(mot => mot[0]).join('').slice(0, 2).toUpperCase();
+const filmrealisateur = await getCollection("films", function (film) {
+    return film.data.realisateur?.id === personne.id;
+});
+const filmsproducteur = await getCollection("films", function (film) {
+    return film.data.producteurs?.some((producteur)=>producteur.id === personne.id);
+});
+// Version originale avec boucle et push
+// const filmsroles:{role:{
+//     acteur: ReferenceDataEntry<"personnes", string>;
+//     nom_role: string;
+// }
+// film: {
+//     id: string;
+//     body?: string;
+//     collection: "films";
+//     data: InferEntrySchema<"films">;
+//     rendered?: RenderedContent;
+//     filePath?: string;
+// }}[] = [];
+// await getCollection("films", function (film) {
+//     const role = film.data.roles?.find((r)=>r.acteur.id === personne.id)
+//     if (role) {
+//         filmsroles.push({role, film});
+//     }
+// });
+
+// Version simplifiée avec flatMap
+const films = await getCollection("films");
+const filmsroles = films.flatMap((film) => {
+    const role = film.data.roles?.find((r) => r.acteur.id === personne.id);
+    return role ? [{ role, film }] : [];
+});
+---
+
+<Layout titre={personne.data.nom}>
+    <div class="max-w-6xl mx-auto">
+        <a href="/personnes" class="inline-flex items-center text-slate-600 hover:text-blue-600 mb-8 transition-colors font-medium">
+            ← Retour aux artistes
+        </a>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div class="lg:col-span-1">
+                {personne.data.image ? (
+                    <div class="rounded-lg overflow-hidden shadow-xl bg-slate-200">
+                        <Image
+                            src={personne.data.image}
+                            alt={`Photo de ${personne.data.nom}`}
+                            class="w-full h-auto"
+                        />
+                    </div>
+                ) : (
+                    <div class="bg-linear-to-br from-blue-100 to-blue-200 aspect-2/3 rounded-lg flex items-center justify-center shadow-xl">
+                        <span class="text-blue-600 text-8xl font-bold">{initiales}</span>
+                    </div>
+                )}
+            </div>
+            
+            <div class="lg:col-span-2">
+                <h1 class="text-5xl font-bold mb-8 text-slate-900">
+                    {personne.data.nom}
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                    <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                        <p class="text-slate-500 text-xs uppercase tracking-wide mb-2">Naissance</p>
+                        <p class="text-slate-900 font-medium">
+                            {formatDate(personne.data.dateNaissance)}
+                        </p>
+                        {!personne.data.dateDeces && (
+                            <p class="text-blue-600 text-sm mt-1">
+                                {calculerAge(personne.data.dateNaissance)} ans
+                            </p>
+                        )}
+                    </div>
+                    
+                    {personne.data.dateDeces && (
+                        <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                            <p class="text-slate-500 text-xs uppercase tracking-wide mb-2">Décès</p>
+                            <p class="text-slate-900 font-medium">
+                                {formatDate(personne.data.dateDeces)}
+                            </p>
+                            <p class="text-blue-600 text-sm mt-1">
+                                {calculerAge(personne.data.dateNaissance, personne.data.dateDeces)} ans
+                            </p>
+                        </div>
+                    )}
+                    
+                    <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                        <p class="text-slate-500 text-xs uppercase tracking-wide mb-2">Nationalité</p>
+                        <p class="text-slate-900 font-medium">{personne.data.nationalite}</p>
+                    </div>
+                    
+                    {personne.data.professions && (
+                        <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                            <p class="text-slate-500 text-xs uppercase tracking-wide mb-2">
+                                Profession{personne.data.professions.length > 1 ? "s" : ""}
+                            </p>
+                            <p class="text-slate-900 font-medium">{formatProfessions(personne.data.professions)}</p>
+                        </div>
+                    )}
+                    {filmrealisateur.length > 0 && (
+                    <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                        <p class="text-slate-500 text-xs uppercase tracking-wide mb-2">
+                            Films réalisés
+                        </p>
+                        <ListeFilm films={filmrealisateur}/>
+                    </div>)
+                    }
+                    {filmsproducteur.length > 0 && (
+                    <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                        <p class="text-slate-500 text-xs uppercase tracking-wide mb-2">
+                            Films produits
+                        </p>
+                        <ListeFilm films={filmsproducteur}/>
+                    </div>)
+                    }
+                    {filmsroles.length > 0 && (
+                    <div class="bg-white p-5 rounded-lg shadow-md border border-slate-200">
+                        <p class="text-slate-500 text-xs uppercase tracking-wide mb-2">
+                            Rôles joués
+                        </p>
+                        {
+                            filmsroles.map((roleInfo)=> (
+                                <div class="mb-2">
+                                    <LinkFilm film={roleInfo.film} /> 
+                                    <span class="text-slate-600"> - {roleInfo.role.nom_role}</span>
+                                </div>
+                            ))
+                        }
+                    </div>)
+                    }
+                </div>
+                
+                <div class="bg-white p-8 rounded-lg shadow-md border border-slate-200">
+                    <div class="prose prose-slate max-w-none prose-headings:text-slate-900 prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-4 prose-h2:mt-6 prose-h3:text-xl prose-h3:font-semibold prose-p:text-slate-700 prose-ul:text-slate-700 prose-strong:text-slate-900 prose-strong:font-semibold">
+                        <Content />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</Layout>
