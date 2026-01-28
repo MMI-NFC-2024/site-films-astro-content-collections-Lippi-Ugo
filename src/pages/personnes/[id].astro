@@ -2,9 +2,10 @@
 import { getCollection, render, type InferEntrySchema, type ReferenceDataEntry, type RenderedContent} from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import { formatDate, calculerAge, formatProfessions} from "../../helpers.js";
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import ListeFilm from "../../components/ListeFilm.astro";
 import LinkFilm from "../../components/LinkFilm.astro";
+import placeholderImage from "../../assets/placeholder-5.png";
 
 export async function getStaticPaths() {
     const personnes = await getCollection("personnes");
@@ -15,7 +16,6 @@ export async function getStaticPaths() {
 }
 const { personne } = Astro.props;
 const { Content } = await render(personne);
-const initiales = personne.data.nom.split(' ').map(mot => mot[0]).join('').slice(0, 2).toUpperCase();
 const filmrealisateur = await getCollection("films", function (film) {
     return film.data.realisateur?.id === personne.id;
 });
@@ -58,19 +58,15 @@ const filmsroles = films.flatMap((film) => {
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
             <div class="lg:col-span-1">
-                {personne.data.image ? (
-                    <div class="rounded-lg overflow-hidden shadow-xl bg-slate-200">
-                        <Image
-                            src={personne.data.image}
-                            alt={`Photo de ${personne.data.nom}`}
-                            class="w-full h-auto"
-                        />
-                    </div>
-                ) : (
-                    <div class="bg-linear-to-br from-blue-100 to-blue-200 aspect-2/3 rounded-lg flex items-center justify-center shadow-xl">
-                        <span class="text-blue-600 text-8xl font-bold">{initiales}</span>
-                    </div>
-                )}
+                <div class="rounded-lg overflow-hidden shadow-xl bg-slate-200">
+                    <Picture
+                        src={personne.data.image ?? placeholderImage}
+                        alt={`Photo de ${personne.data.nom}`}
+                        densities={[1, 2]}
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        class="w-full h-auto"
+                    />
+                </div>
             </div>
             
             <div class="lg:col-span-2">

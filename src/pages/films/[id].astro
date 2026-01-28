@@ -37,6 +37,8 @@ const rolesEntries = film.data.roles ? await Promise.all(film.data.roles.map( as
                     <Picture
                         src={film.data.image ?? placeholderImage}
                         alt={`Photo de ${film.data.titre}`}
+                        densities={[1, 2]}
+                        sizes="(max-width: 768px) 100vw, 400px"
                         class="w-full h-auto"
                     />
                 </div>
